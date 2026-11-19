@@ -166,7 +166,7 @@ function renderSelectedProducts() {
     .map(
       (product) => `
       <div class="selected-product-item" data-id="${product.id}">
-        <span>${escapeHtml(product.brand)} — ${escapeHtml(product.name)}</span>
+        <span>${escapeHtml(product.brand)} &middot; ${escapeHtml(product.name)}</span>
         <button
           type="button"
           class="remove-btn"
@@ -184,7 +184,7 @@ function displayProducts(products) {
   if (products.length === 0) {
     productsContainer.innerHTML = `
       <div class="placeholder-message">
-        No products found in this category.
+        No matching products found. Try another category or keyword.
       </div>
     `;
     return;
@@ -201,30 +201,55 @@ function displayProducts(products) {
           tabindex="0"
           aria-pressed="${selected}"
         >
-          <div class="product-card-main">
-            <img src="${escapeHtml(product.image)}" alt="${escapeHtml(product.name)}">
-            <div class="product-info">
-              <h3>${escapeHtml(product.name)}</h3>
-              <p>${escapeHtml(product.brand)}</p>
-            </div>
+          <div class="product-image-stage">
+            <img
+              src="${escapeHtml(product.image)}"
+              alt="${escapeHtml(product.brand)} ${escapeHtml(product.name)}"
+              referrerpolicy="no-referrer"
+            />
           </div>
-          <p id="desc-${product.id}" class="product-description" hidden>${escapeHtml(product.description)}</p>
-          <div class="product-card-actions">
-            <button
-              type="button"
-              class="details-btn"
-              aria-expanded="false"
-              aria-controls="desc-${product.id}"
-              aria-label="Show details for ${escapeHtml(product.name)}"
-            >
-              <i class="fa-solid fa-circle-info" aria-hidden="true"></i> Details
-            </button>
-            <span class="selected-badge">${selected ? "✓ Selected" : ""}</span>
+          <div class="product-card-body">
+            <div class="product-info">
+              <p class="product-brand">${escapeHtml(product.brand)}</p>
+              <h3>${escapeHtml(product.name)}</h3>
+            </div>
+            <p id="desc-${product.id}" class="product-description" hidden>${escapeHtml(product.description)}</p>
+            <div class="product-card-actions">
+              <button
+                type="button"
+                class="details-btn"
+                aria-expanded="false"
+                aria-controls="desc-${product.id}"
+                aria-label="Show details for ${escapeHtml(product.name)}"
+              >
+                <i class="fa-solid fa-circle-info" aria-hidden="true"></i> Details
+              </button>
+              <span class="selected-badge">${selected ? "✓ Selected" : ""}</span>
+            </div>
           </div>
         </div>
       `;
     })
     .join("");
+
+  // Provide a clean fallback container if an external image fails to load
+  const images = productsContainer.querySelectorAll(".product-image-stage img");
+  images.forEach((img) => {
+    img.addEventListener("error", () => {
+      const stage = img.closest(".product-image-stage");
+      const card = img.closest(".product-card");
+      const brand = card?.querySelector(".product-brand")?.textContent || "L'ORÉAL";
+      const name = card?.querySelector("h3")?.textContent || "";
+      if (stage) {
+        stage.innerHTML = `
+          <div class="product-image-fallback">
+            <strong>${escapeHtml(brand.toUpperCase())}</strong>
+            <span>${escapeHtml(name)}</span>
+          </div>
+        `;
+      }
+    });
+  });
 }
 
 /* Add a message bubble to the chat window (with optional clickable citations) */
